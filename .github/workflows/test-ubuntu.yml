@@ -12,6 +12,7 @@ on:
 
 jobs:
   unit-bazel-clang:
+    # need to match save glibc version in rtorrent.dockerfile
     runs-on: ubuntu-22.04
 
     steps:
