@@ -47,7 +47,7 @@ jobs:
 
       - run: bazel build --config=clang -s rtorrent-bin
 
-      - run: ls -ahlL bazel-bin
+      - run: ls -ahlL bazel-bin/rtorrent rtorrent
 
       - run: cp -L bazel-bin/bazel-bin rtorrent.deb
 
