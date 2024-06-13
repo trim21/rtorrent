@@ -1235,7 +1235,7 @@ initialize_command_download() {
     return cg_d_group(download);
   });
   CMD2_DL("d.group.name", [](const auto& download, const auto&) {
-    return cg_d_group(download);
+    return cg_d_group_name(download);
   });
   CMD2_DL_V("d.group.set", [](const auto& download, const auto& arg) {
     return cg_d_group_set(download, arg);
