@@ -4,7 +4,7 @@ FROM ${ALPINE_IMAGE} as build
 
 WORKDIR /root/rtorrent
 
-RUN echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
+# RUN echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
 
 # Install build dependencies
 RUN apk --no-cache add \

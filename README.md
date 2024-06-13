@@ -1,6 +1,5 @@
 # RTorrent BitTorrent Client
 
-
 rTorrent is a stable, high-performance and low resource consumption BitTorrent client.
 
 This distribution focuses on additional user-facing features, optimizations and better integrations with modern users of RPC interfaces. One of the long-term goal of this project is to switch from antique XML-RPC to modern protocols with bidirectional capabilities such as gRPC, JSON-RPC over WebSocket or GraphQL, which allows real-time events, less serialization/transfer overheads, better security, etc.
