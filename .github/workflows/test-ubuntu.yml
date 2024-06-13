@@ -4,62 +4,13 @@ on:
   push:
     branches:
       - master
-      - fix-d-group-name
+      - personal
   pull_request:
     branches:
       - master
-      - fix-d-group-name
+      - personal
 
 jobs:
-  unit-cmake:
-    runs-on: ubuntu-20.04
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - run: sudo apt update
-      - run: sudo apt install -y build-essential ninja-build libgtest-dev libcurl4-openssl-dev libncursesw5-dev libssl-dev libxmlrpc-c++8-dev nlohmann-json3-dev zlib1g-dev
-
-      - name: Checkout libTorrent
-        uses: actions/checkout@v2
-        with:
-          repository: jesec/libtorrent
-          path: libtorrent
-
-      - name: Install libTorrent
-        run: |
-          cmake -GNinja -S libtorrent -B libtorrent
-          cmake --build libtorrent
-          sudo cmake --install libtorrent
-          sudo ldconfig
-
-      - run: cmake -B build -DCMAKE_INSTALL_PREFIX=install -GNinja .
-      - run: cmake --build build
-      - run: cmake --install build
-      - run: cd build && ctest --verbose
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: rtorrent-linux-cmake
-          path: install/
-
-  unit-bazel:
-    runs-on: ubuntu-20.04
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - run: sudo apt update
-      - run: sudo apt install -y build-essential
-      - run: sudo wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -O /usr/local/bin/bazel
-      - run: sudo chmod +x /usr/local/bin/bazel
-
-      - run: bazel coverage --instrument_test_targets --collect_code_coverage --combined_report=lcov --test_output=all //...
-
-      - uses: codecov/codecov-action@v1
-        with:
-          directory: ./bazel-out/_coverage
-
   unit-bazel-clang:
     runs-on: ubuntu-20.04
 
@@ -93,43 +44,10 @@ jobs:
       - run: bazel test --config=clang -s //...
 
       - run: bazel build --config=clang -s rtorrent-deb
+      - run: ls -ahl bazel-bin
       - run: cp -L bazel-bin/rtorrent-deb.deb rtorrent.deb
 
       - uses: actions/upload-artifact@v2
         with:
           name: rtorrent-deb-glibc-amd64
           path: rtorrent.deb
-
-  end-to-end:
-    needs: unit-bazel-clang
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Copy rTorrent built in previous job
-        uses: actions/download-artifact@v2
-        with:
-          name: rtorrent-deb-glibc-amd64
-
-      - name: Install rTorrent
-        run: |
-          sudo dpkg -i rtorrent.deb
-          rm rtorrent.deb
-
-      - name: Checkout Flood
-        run: |
-          git clone --depth 1 --branch master https://github.com/jesec/flood.git .
-
-      - name: Use Node.js LTS
-        uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-
-      - run: npm ci --no-optional
-      - run: npm run build
-
-      - name: End-to-end test rTorrent with Flood's test suite
-        uses: nick-invision/retry@v2
-        with:
-          max_attempts: 5
-          timeout_minutes: 30
-          command: npm t -- --selectProjects rtorrent --runTestsByPath server/routes/api/torrents.test.ts server/routes/api/client.test.ts
