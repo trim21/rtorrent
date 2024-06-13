@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - fix-d-group-name
   pull_request:
     branches:
       - master
+      - fix-d-group-name
 
 jobs:
   unit-cmake:
