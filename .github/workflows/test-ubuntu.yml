@@ -45,6 +45,8 @@ jobs:
 
       - run: cp -L bazel-bin/rtorrent rtorrent
 
+      - run: chmod +x rtorrent
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
