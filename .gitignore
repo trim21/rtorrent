@@ -15,6 +15,7 @@
 # Autoconf files #
 ##################
 
+cmake-build-debug/
 .deps
 .libs
 Makefile
