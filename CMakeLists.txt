@@ -11,6 +11,8 @@ project(
 # API version information
 set(API_VERSION 10)
 
+set(USE_CHOKE_GROUP 1)
+
 # Options
 option(BUILDINFO_ONLY "Generate buildinfo.h only" OFF)
 option(USE_EXTRA_DEBUG "Enable extra debugging checks" OFF)

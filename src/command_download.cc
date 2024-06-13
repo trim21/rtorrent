@@ -792,8 +792,10 @@ d_list_remove(core::Download*        download,
 
 int64_t
 cg_d_group(core::Download* download);
+
 const std::string&
 cg_d_group_name(core::Download* download);
+
 void
 cg_d_group_set(core::Download* download, const torrent::Object& arg);
 
