@@ -35,7 +35,7 @@ jobs:
           sudo ln -sf /usr/bin/llvm-strip-$LLVM_VERSION /usr/bin/llvm-strip
           sudo ln -sf /usr/bin/llvm-config-$LLVM_VERSION /usr/bin/llvm-config
         env:
-          LLVM_VERSION: 11
+          LLVM_VERSION: 13
 
       - run: sudo apt update
       - run: sudo apt install -y build-essential
