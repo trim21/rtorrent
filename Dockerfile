@@ -1,17 +1,16 @@
-ARG ALPINE_IMAGE=alpine:edge
+ARG ALPINE_IMAGE=alpine:3.17
 
 FROM ${ALPINE_IMAGE} as build
 
 WORKDIR /root/rtorrent
 
-# RUN echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
+RUN echo https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
 
 # Install build dependencies
 RUN apk --no-cache add \
     bash \
     bazel \
     build-base \
-    coreutils \
     gcompat \
     git \
     linux-headers \
