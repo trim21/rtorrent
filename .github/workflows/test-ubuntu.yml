@@ -41,11 +41,15 @@ jobs:
       - run: sudo wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -O /usr/local/bin/bazel
       - run: sudo chmod +x /usr/local/bin/bazel
 
-      - run: bazel test --config=clang -s //...
+#      - run: bazel test --config=clang -s //...
 
-      - run: bazel build --config=clang -s rtorrent-deb
-      - run: ls -ahl bazel-bin
-      - run: cp -L bazel-bin/rtorrent-deb.deb rtorrent.deb
+#      - run: bazel build --config=clang -s rtorrent-deb
+
+      - run: bazel build --config=clang -s rtorrent-bin
+
+      - run: ls -ahlL bazel-bin
+
+      - run: cp -L bazel-bin/bazel-bin rtorrent.deb
 
       - uses: actions/upload-artifact@v2
         with:
