@@ -27,7 +27,7 @@ RUN if [[ `uname -m` == "aarch64" ]]; then \
 
 RUN chmod +x /usr/local/bin/bazel
 
-ENV USE_BAZEL_VERSION="7.*""
+ENV USE_BAZEL_VERSION="7.*"
 
 RUN bazel --help
 
