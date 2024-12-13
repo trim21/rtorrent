@@ -35,7 +35,7 @@ RUN bash docker-build.bash
 
 
 # Build rTorrent packages
-RUN bazel build rtorrent-deb --features=fully_static_link --verbose_failures
+RUN bazel build rtorrent-deb --features=fully_static_link --features=external_include_paths --verbose_failures
 
 # Copy outputs
 RUN mkdir dist
