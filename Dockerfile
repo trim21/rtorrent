@@ -25,6 +25,8 @@ RUN if [[ `uname -m` == "aarch64" ]]; then \
     fi
 
 
+RUN chmod +x /usr/local/bin/bazel
+
 ENV USE_BAZEL_VERSION=7
 
 RUN bazel --help
@@ -42,7 +44,6 @@ RUN set -ex ; if [[ `uname -m` == "aarch64" ]]; then \
         sed -i 's/architecture = \"all\"/architecture = \"amd64\"/' BUILD.bazel; \
     fi
 
-RUN chmod +x /usr/local/bin/bazel
 
 
 # Build rTorrent packages
