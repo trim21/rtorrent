@@ -14,11 +14,11 @@ RUN apt-get update -y &&\
     wget \
     binutils bash coreutils
 
-RUN if [[ `uname -m` == "aarch64" ]]; then \
+RUN bash -c 'if [[ `uname -m` == "aarch64" ]]; then \
         wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-arm64 -O /usr/local/bin/bazel ;\
     elif [[ `uname -m` == "x86_64" ]]; then \
         wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -O /usr/local/bin/bazel ; \
-    fi
+    fi'
 
 
 RUN chmod +x /usr/local/bin/bazel
@@ -30,6 +30,13 @@ RUN bazel --help
 # Checkout rTorrent sources from current directory
 
 COPY . ./
+
+RUN bash -c if [[ `uname -m` == "aarch64" ]]; \
+    then sed -i 's/architecture = \"all\"/architecture = \"arm64\"/' BUILD.bazel; \
+    elif [[ `uname -m` == "x86_64" ]]; \
+    then sed -i 's/architecture = \"all\"/architecture = \"amd64\"/' BUILD.bazel; \
+    fi
+
 
 # Build rTorrent packages
 RUN bazel build rtorrent-deb --features=fully_static_link --verbose_failures
