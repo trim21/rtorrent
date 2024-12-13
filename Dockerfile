@@ -11,7 +11,8 @@ RUN apt-get update -y &&\
     libssl-dev \
     zlib1g-dev \
     cmake \
-    wget
+    wget \
+    binutils
 
 RUN if [[ `uname -m` == "aarch64" ]]; then \
         wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-arm64 -O /usr/local/bin/bazel ;\
