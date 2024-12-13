@@ -4,7 +4,7 @@ WORKDIR /root/rtorrent
 
 # Install build dependencies
 RUN apt-get update -y &&\
-    apt-get install build-essential \
+    apt-get install -y build-essential \
     libcurl4-openssl-dev \
     nlohmann-json3-dev\
     libxmlrpc-c++8-dev \
