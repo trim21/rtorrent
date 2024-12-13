@@ -11,10 +11,6 @@ config_setting(
 
 COPTS = [
     "-std=c++17",
-    "-Wall",
-    "-Wextra",
-    "-Wpedantic",
-    "-Wvla",
 ] + select({
     "//:opt": [
         "-Ofast",
