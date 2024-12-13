@@ -12,7 +12,7 @@ RUN apt-get update -y &&\
     zlib1g-dev \
     cmake \
     wget \
-    binutils bash
+    binutils bash coreutils
 
 RUN if [[ `uname -m` == "aarch64" ]]; then \
         wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-arm64 -O /usr/local/bin/bazel ;\
