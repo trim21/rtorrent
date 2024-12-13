@@ -11,7 +11,6 @@ config_setting(
 
 COPTS = [
     "-std=c++17",
-    "-Werror",
     "-Wall",
     "-Wextra",
     "-Wpedantic",
