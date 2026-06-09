@@ -406,7 +406,7 @@ void
 initialize_command_dynamic() {
   // clang-format off
 #ifdef HAVE_XMLRPC_TINYXML2
-  CMD2_ANY         ("system.listMethods", std::bind(&system_listMethods)); // only used by tinyxml2
+  CMD2_ANY         ("system.listMethods", [](auto, const auto&) { return system_listMethods(); }); // only used by tinyxml2
 #endif
 
   // Keep these for future use when we deprecate more commands.
@@ -426,8 +426,7 @@ initialize_command_dynamic() {
 
   CMD2_ANY_STRING  ("method.erase",     std::bind(&system_method_erase, std::placeholders::_2));
   CMD2_ANY_LIST    ("method.redirect",  std::bind(&system_method_redirect, std::placeholders::_2));
-  CMD2_ANY_STRING  ("method.get",       std::bind(&rpc::object_storage::get_str, control->object_storage(),
-                                                       std::placeholders::_2));
+  CMD2_ANY_STRING  ("method.get",       [storage = control->object_storage()](auto, const auto& key) { return storage->get_str(key); });
   CMD2_ANY_LIST    ("method.set",       std::bind(&system_method_set_function, std::placeholders::_2));
 
   CMD2_ANY_STRING  ("method.const",        std::bind(&rpc::object_storage::has_flag_str, control->object_storage(),
