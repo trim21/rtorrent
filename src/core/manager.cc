@@ -84,7 +84,7 @@ Manager::set_hashing_view(View* v) {
     throw torrent::internal_error("Manager::set_hashing_view(...) received nullptr or is already set.");
 
   m_hashingView = v;
-  m_hashingView->signal_changed().push_back(std::bind(&Manager::receive_hashing_changed, this));
+  m_hashingView->signal_changed().push_back([this]() { receive_hashing_changed(); });
 }
 
 torrent::ThrottlePair
