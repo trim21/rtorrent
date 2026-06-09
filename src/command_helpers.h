@@ -69,13 +69,13 @@ void initialize_commands();
 
 #define CMD2_VAR_VALUE(key, value)                                      \
   control->object_storage()->insert_c_str(key, int64_t(value), rpc::object_storage::flag_value_type); \
-  CMD2_ANY(key, [storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto&) { return storage->get(k); }); \
-  CMD2_ANY_VALUE(key ".set", [storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto& v) { storage->set_value(k, v); return torrent::Object(); });
+  CMD2_ANY(key, ([storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto&) { return storage->get(k); })); \
+  CMD2_ANY_VALUE(key ".set", ([storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto& v) { storage->set_value(k, v); return torrent::Object(); }));
 
 #define CMD2_VAR_STRING(key, value)                                     \
   control->object_storage()->insert_c_str(key, value, rpc::object_storage::flag_string_type); \
-  CMD2_ANY(key, [storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto&) { return storage->get(k); }); \
-  CMD2_ANY_STRING(key ".set", [storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto& v) { storage->set_string(k, v); return torrent::Object(); });
+  CMD2_ANY(key, ([storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto&) { return storage->get(k); })); \
+  CMD2_ANY_STRING(key ".set", ([storage = control->object_storage(), k = torrent::raw_string::from_c_str(key)](auto, const auto& v) { storage->set_string(k, v); return torrent::Object(); }));
 
 
 #define CMD2_VAR_C_STRING(key, value)                                   \
