@@ -445,7 +445,7 @@ main(int argc, char** argv) {
                       "Caught internal_error: '%s'.", e.what());
 
     torrent::log_cleanup();
-    return -1;
+    _exit(-1);
 
   } catch (std::exception& e) {
     control->cleanup_exception();
@@ -455,7 +455,7 @@ main(int argc, char** argv) {
     lt_log_print(torrent::LOG_CRITICAL, "Caught exception: '%s'.", e.what());
 
     torrent::log_cleanup();
-    return -1;
+    _exit(-1);
   }
 
   delete control;
