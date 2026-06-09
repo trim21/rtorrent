@@ -65,7 +65,7 @@ class command_base;
 typedef const torrent::Object (*command_base_call_type)(command_base*, target_type, const torrent::Object&);
 typedef std::function<torrent::Object (target_type, const torrent::Object&)> base_function;
 
-template <typename tmpl> struct command_base_is_valid {};
+template <typename tmpl> struct command_base_is_valid { static const int value = 1; };
 template <command_base_call_type tmpl_func> struct command_base_is_type {};
 
 class command_base {
@@ -131,10 +131,10 @@ public:
   static torrent::Object* push_stack(const torrent::Object* first_arg, const torrent::Object* last_arg, stack_type* stack);
   static void             pop_stack(stack_type* stack, torrent::Object* last_stack);
 
-  template <typename Slot>
-  void set_function(Slot s, [[maybe_unused]] int value = command_base_is_valid<Slot>::value) {
+  template <typename T>
+  void set_function(T s, [[maybe_unused]] int value = command_base_is_valid<T>::value) {
     _pod<base_function>().~base_function();
-    new (&_pod<base_function>()) base_function(std::move(s));
+    new (&_pod<T>()) T(std::move(s));
   }
 
   // The std::function object in GCC is castable between types with a
