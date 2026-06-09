@@ -462,6 +462,7 @@ Manager::try_create_download_expand(const std::string& uri, int flags, command_l
 // hashing view and starts hashing if nessesary.
 void
 Manager::receive_hashing_changed() {
+  fprintf(stderr, "[hash] receive_hashing_changed called\n");
   bool foundHashing = std::any_of(m_hashingView->begin_visible(), m_hashingView->end_visible(),
                                    std::mem_fn(&Download::is_hash_checking));
 
