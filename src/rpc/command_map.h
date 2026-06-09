@@ -70,7 +70,7 @@ public:
   void
   insert_slot(const key_type& key, Slot variable, command_base::any_slot target_slot, int flags, const char* parm, const char* doc) {
     iterator itr = insert(key, flags, parm, doc);
-    itr->second.m_variable.set_function<T>(variable);
+    itr->second.m_variable.set_function(variable);
     itr->second.m_anySlot = target_slot;
   }
 

@@ -131,12 +131,10 @@ public:
   static torrent::Object* push_stack(const torrent::Object* first_arg, const torrent::Object* last_arg, stack_type* stack);
   static void             pop_stack(stack_type* stack, torrent::Object* last_stack);
 
-  template <typename T>
-  void set_function(T s, [[maybe_unused]] int value = command_base_is_valid<T>::value) { _pod<T>() = s; }
-
-  template <command_base_call_type T>
-  void set_function_2(typename command_base_is_type<T>::type s, [[maybe_unused]] int value = command_base_is_valid<typename command_base_is_type<T>::type>::value) {
-    _pod<typename command_base_is_type<T>::type>() = s;
+  template <typename Slot>
+  void set_function(Slot s, [[maybe_unused]] int value = command_base_is_valid<Slot>::value) {
+    _pod<base_function>().~base_function();
+    new (&_pod<base_function>()) base_function(std::move(s));
   }
 
   // The std::function object in GCC is castable between types with a
