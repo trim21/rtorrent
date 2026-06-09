@@ -2,12 +2,11 @@
 #define RTORRENT_RPC_COMMAND_H
 
 #include <functional>
-#include <limits>
+#include <type_traits>
 #include <torrent/common.h>
 #include <torrent/object.h>
 #include <torrent/data/file_list_iterator.h>
 
-// Move into config.h or something.
 namespace core {
   class Download;
 }
@@ -28,7 +27,6 @@ struct target_wrapper<void> {
   typedef no_type*    cleaned_type;
 };
 
-// Since c++0x isn't out yet...
 template <typename T1, typename T2, typename T3>
 struct rt_triple : private std::pair<T1, T2> {
   typedef std::pair<T1, T2> base_type;
@@ -55,18 +53,11 @@ struct rt_triple : private std::pair<T1, T2> {
     base_type(src.first, src.second), third(src.third) {}
 };
 
-// Since it gets used so many places we might as well put it in the
-// rpc namespace.
-//typedef std::pair<int, void*> target_type;
 typedef rt_triple<int, void*, void*> target_type;
 
 class command_base;
 
-typedef const torrent::Object (*command_base_call_type)(command_base*, target_type, const torrent::Object&);
 typedef std::function<torrent::Object (target_type, const torrent::Object&)> base_function;
-
-template <typename tmpl> struct command_base_is_valid { static const int value = 1; };
-template <command_base_call_type tmpl_func> struct command_base_is_type {};
 
 class command_base {
 public:
@@ -114,10 +105,8 @@ public:
     char buffer[sizeof(torrent::Object) * max_arguments];
   };
 
-  command_base() { new (&_pod<base_function>()) base_function(); }
-  command_base(const command_base& src) { new (&_pod<base_function>()) base_function(src._pod<base_function>()); }
-
-  ~command_base() { _pod<base_function>().~base_function(); }
+  command_base() = default;
+  ~command_base() = default;
 
   static torrent::Object* argument(unsigned int index) { return current_stack.begin() + index; }
   static torrent::Object& argument_ref(unsigned int index) { return *(current_stack.begin() + index); }
@@ -131,45 +120,20 @@ public:
   static torrent::Object* push_stack(const torrent::Object* first_arg, const torrent::Object* last_arg, stack_type* stack);
   static void             pop_stack(stack_type* stack, torrent::Object* last_stack);
 
-  template <typename T>
-  void set_function(T s, [[maybe_unused]] int value = command_base_is_valid<T>::value) {
-    _pod<base_function>().~base_function();
-    new (&_pod<T>()) T(std::move(s));
-  }
+  void set_function(base_function f) { t_pod = std::move(f); }
 
-  // The std::function object in GCC is castable between types with a
-  // pointer to a struct of ctor/dtor/calls for non-POD slots. As such
-  // it should be safe to cast between different std::function
-  // template types, yet what the C++0x standard will say about this I
-  // have no idea atm.
-  template <typename tmpl> tmpl& _pod() { return reinterpret_cast<tmpl&>(t_pod); }
-  template <typename tmpl> const tmpl& _pod() const { return reinterpret_cast<const tmpl&>(t_pod); }
-
-  template <typename Func, typename T, typename Args>
-  static const torrent::Object _call(command_base* cmd, target_type target, Args args);
-
-  command_base& operator = (const command_base& src) {
-    _pod<base_function>() = src._pod<base_function>();
-    return *this;
-  }
+  torrent::Object call(const target_type& t, const torrent::Object& o) const { return t_pod(t, o); }
 
 protected:
-  // For use by functions that need to use placeholders to arguments
-  // within commands. E.d. callable command strings where one of the
-  // arguments within the command needs to be supplied by the caller.
-
   base_function t_pod;
 };
 
 template <typename T1 = void, typename T2 = void>
-struct target_type_id {
-  // Nothing here, so we cause an error.
-};
+struct target_type_id {};
 
 template <typename T> inline bool
 is_target_compatible(const target_type& target) { return target.first == target_type_id<T>::value; }
 
-// Splitting pairs into separate targets.
 inline bool is_target_pair(const target_type& target) { return target.first >= command_base::target_download_pair; }
 
 template <typename T> inline T
@@ -178,51 +142,23 @@ get_target_cast(target_type target, [[maybe_unused]] int type = target_type_id<T
 inline target_type get_target_left(const target_type& target)  { return target_type(target.first - 5, target.second); }
 inline target_type get_target_right(const target_type& target) { return target_type(target.first - 5, target.third); }
 
+torrent::Object::value_type convert_to_value_arg(const torrent::Object& obj, int base, int unit);
+std::string              convert_to_string_arg(const torrent::Object& obj);
+torrent::Object::list_type convert_to_list_arg(const torrent::Object& obj);
+
+template<typename T>
+inline T extract_target(const target_type& t) {
+  if constexpr (std::is_same_v<T, target_type>) {
+    return t;
+  } else {
+    if (!is_target_compatible<T>(t))
+      throw torrent::input_error("Target of wrong type to command.");
+    return static_cast<T>(t.second);
+  }
+}
+
 }
 
 #include "command_impl.h"
-
-namespace rpc {
-
-template <typename Func, typename T, typename Args>
-inline const torrent::Object
-command_base::_call(command_base* cmd, target_type target, Args args) {
-  return static_cast<command_base*>(cmd)->_pod<Func>()(get_target_cast<T>(target), args);
-}
-
-#define COMMAND_BASE_TEMPLATE_TYPE(func_type, func_parm)                \
-  template <typename T, int proper = target_type_id<T>::proper_type> struct func_type { typedef std::function<func_parm> type; }; \
-                                                                        \
-  template <> struct command_base_is_valid<func_type<target_type>::type>                { static const int value = 1; }; \
-  template <> struct command_base_is_valid<func_type<core::Download*>::type>            { static const int value = 1; }; \
-  template <> struct command_base_is_valid<func_type<torrent::Peer*>::type>             { static const int value = 1; }; \
-  template <> struct command_base_is_valid<func_type<torrent::tracker::Tracker*>::type> { static const int value = 1; }; \
-  template <> struct command_base_is_valid<func_type<torrent::File*>::type>             { static const int value = 1; }; \
-  template <> struct command_base_is_valid<func_type<torrent::FileListIterator*>::type> { static const int value = 1; };
-
-//  template <typename Q> struct command_base_is_valid<typename func_type<Q>::type > { static const int value = 1; };
-
-COMMAND_BASE_TEMPLATE_TYPE(command_function,        torrent::Object (T, const torrent::Object&));
-COMMAND_BASE_TEMPLATE_TYPE(command_value_function,  torrent::Object (T, const torrent::Object::value_type&));
-COMMAND_BASE_TEMPLATE_TYPE(command_string_function, torrent::Object (T, const std::string&));
-COMMAND_BASE_TEMPLATE_TYPE(command_list_function,   torrent::Object (T, const torrent::Object::list_type&));
-
-#define COMMAND_BASE_TEMPLATE_CALL(func_name, func_type)                \
-  template <typename T> const torrent::Object func_name(command_base* rawCommand, target_type target, const torrent::Object& args); \
-                                                                        \
-  template <> struct command_base_is_type<func_name<target_type> >       { static const int value = 1; typedef func_type<target_type>::type type; }; \
-  template <> struct command_base_is_type<func_name<core::Download*> >   { static const int value = 1; typedef func_type<core::Download*>::type type; }; \
-  template <> struct command_base_is_type<func_name<torrent::Peer*> >    { static const int value = 1; typedef func_type<torrent::Peer*>::type type; }; \
-  template <> struct command_base_is_type<func_name<torrent::tracker::Tracker*> > { static const int value = 1; typedef func_type<torrent::tracker::Tracker*>::type type; }; \
-  template <> struct command_base_is_type<func_name<torrent::File*> >             { static const int value = 1; typedef func_type<torrent::File*>::type type; }; \
-  template <> struct command_base_is_type<func_name<torrent::FileListIterator*> > { static const int value = 1; typedef func_type<torrent::FileListIterator*>::type type; };
-
-COMMAND_BASE_TEMPLATE_CALL(command_base_call, command_function);
-COMMAND_BASE_TEMPLATE_CALL(command_base_call_value, command_value_function);
-COMMAND_BASE_TEMPLATE_CALL(command_base_call_value_kb, command_value_function);
-COMMAND_BASE_TEMPLATE_CALL(command_base_call_string, command_string_function);
-COMMAND_BASE_TEMPLATE_CALL(command_base_call_list, command_list_function);
-
-}
 
 #endif

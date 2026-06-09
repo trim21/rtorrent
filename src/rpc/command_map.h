@@ -10,7 +10,7 @@
 
 namespace rpc {
 
-struct alignas(16) command_map_data_type {
+struct command_map_data_type {
   // Some commands will need to share data, like get/set a variable. So
   // instead of using a single virtual member function, each command
   // will register a member function pointer to be used instead.
@@ -23,7 +23,6 @@ struct alignas(16) command_map_data_type {
   command_map_data_type(const command_map_data_type& src) = default;
 
   command_base             m_variable;
-  command_base::any_slot   m_anySlot;
 
   int           m_flags;
 
@@ -66,12 +65,11 @@ public:
 
   iterator            insert(const key_type& key, int flags, const char* parm, const char* doc);
 
-  template <typename T, typename Slot>
+  template <typename Slot>
   void
-  insert_slot(const key_type& key, Slot variable, command_base::any_slot target_slot, int flags, const char* parm, const char* doc) {
+  insert_slot(const key_type& key, Slot variable, int flags, const char* parm, const char* doc) {
     iterator itr = insert(key, flags, parm, doc);
-    itr->second.m_variable.set_function<T>(variable);
-    itr->second.m_anySlot = target_slot;
+    itr->second.m_variable.set_function(variable);
   }
 
   void                erase(iterator itr);

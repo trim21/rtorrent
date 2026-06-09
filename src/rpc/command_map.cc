@@ -76,9 +76,7 @@ CommandMap::create_redirect(const key_type& key_new, const key_type& key_dest, i
                                                                              dest_itr->second.m_parm,
                                                                              dest_itr->second.m_doc)));
 
-  // We can assume all the slots are the same size.
   itr->second.m_variable = dest_itr->second.m_variable;
-  itr->second.m_anySlot = dest_itr->second.m_anySlot;
 }
 
 const CommandMap::mapped_type
@@ -101,7 +99,7 @@ CommandMap::call_command(const key_type& key, const mapped_type& arg, const targ
   if (!rpc.is_trusted() && !(itr->second.m_flags & flag_untrusted_safe))
     throw untrusted_error("Command \"" + std::string(key) + "\" is not allowed for untrusted connections.");
 
-  return itr->second.m_anySlot(&itr->second.m_variable, target, arg);
+  return itr->second.m_variable.call(target, arg);
 }
 
 const CommandMap::mapped_type
@@ -109,7 +107,7 @@ CommandMap::call_command(iterator itr, const mapped_type& arg, const target_type
   if (!rpc.is_trusted() && !(itr->second.m_flags & flag_untrusted_safe))
     throw untrusted_error("Command \"" + itr->first + "\" is not allowed for untrusted connections.");
 
-  return itr->second.m_anySlot(&itr->second.m_variable, target, arg);
+  return itr->second.m_variable.call(target, arg);
 }
 
 }

@@ -168,19 +168,17 @@ system_method_insert_object(const torrent::Object::list_type& args, int flags) {
   if ((flags & rpc::object_storage::mask_type) == rpc::object_storage::flag_function_type ||
       (flags & rpc::object_storage::mask_type) == rpc::object_storage::flag_multi_type) {
 
-    rpc::commands.insert_slot<rpc::command_base_is_type<rpc::command_base_call<rpc::target_type>>::type>(
+    rpc::commands.insert_slot(
       raw_key,
       [storage = control->object_storage(), k = raw_key](const auto& target, const auto& obj) { return storage->call_function_str(k, target, obj); },
-      &rpc::command_base_call<rpc::target_type>,
       cmd_flags,
       NULL,
       NULL);
 
   } else {
-    rpc::commands.insert_slot<rpc::command_base_is_type<rpc::command_base_call<rpc::target_type>>::type>(
+    rpc::commands.insert_slot(
       raw_key,
       [storage = control->object_storage(), k = raw_key](const auto&, const auto&) { return storage->get_str(k); },
-      &rpc::command_base_call<rpc::target_type>,
       cmd_flags,
       NULL,
       NULL);
@@ -202,37 +200,37 @@ system_method_insert_object(const torrent::Object::list_type& args, int flags) {
   if (!(flags & rpc::object_storage::flag_constant)) {
     switch (flags & rpc::object_storage::mask_type) {
     case rpc::object_storage::flag_bool_type:
-      rpc::commands.insert_slot<rpc::command_base_is_type<rpc::command_base_call_value<rpc::target_type>>::type>(
+      rpc::commands.insert_slot(
         raw_key + ".set",
-        [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_bool(raw_key, v); },
-        &rpc::command_base_call_value<rpc::target_type>,
+        rpc::wrap_target_value_slot<rpc::target_type>(
+          [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_bool(raw_key, v); }),
         cmd_flags,
         NULL,
         NULL);
       break;
     case rpc::object_storage::flag_value_type:
-      rpc::commands.insert_slot<rpc::command_base_is_type<rpc::command_base_call_value<rpc::target_type>>::type>(
+      rpc::commands.insert_slot(
         raw_key + ".set",
-        [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_value(raw_key, v); },
-        &rpc::command_base_call_value<rpc::target_type>,
+        rpc::wrap_target_value_slot<rpc::target_type>(
+          [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_value(raw_key, v); }),
         cmd_flags,
         NULL,
         NULL);
       break;
     case rpc::object_storage::flag_string_type:
-      rpc::commands.insert_slot<rpc::command_base_is_type<rpc::command_base_call_string<rpc::target_type>>::type>(
+      rpc::commands.insert_slot(
         raw_key + ".set",
-        [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_string(raw_key, v); },
-        &rpc::command_base_call_string<rpc::target_type>,
+        rpc::wrap_target_string_slot<rpc::target_type>(
+          [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_string(raw_key, v); }),
         cmd_flags,
         NULL,
         NULL);
       break;
     case rpc::object_storage::flag_list_type:
-      rpc::commands.insert_slot<rpc::command_base_is_type<rpc::command_base_call_list<rpc::target_type>>::type>(
+      rpc::commands.insert_slot(
         raw_key + ".set",
-        [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_list(raw_key, v); },
-        &rpc::command_base_call_list<rpc::target_type>,
+        rpc::wrap_target_list_slot<rpc::target_type>(
+          [storage = control->object_storage(), raw_key](const auto&, const auto& v) { return storage->set_str_list(raw_key, v); }),
         cmd_flags,
         NULL,
         NULL);
@@ -400,7 +398,7 @@ cmd_catch(rpc::target_type target, const torrent::Object& args) {
 }
 
 #define CMD2_METHOD_INSERT(key, flags) \
-  CMD2_ANY_LIST(key, ([](const auto&, const auto& args) { return system_method_insert_object(args, flags); }));
+  CMD2_ANY_LIST(key, [](const auto&, const auto& args) { return system_method_insert_object(args, flags); });
 
 void
 initialize_command_dynamic() {
@@ -413,44 +411,44 @@ initialize_command_dynamic() {
   CMD2_VAR_BOOL    ("method.use_deprecated", false);
   CMD2_VAR_VALUE   ("method.use_intermediate", 3);
 
-  CMD2_ANY_LIST    ("method.insert",             ([](const auto&, const auto& args) { return system_method_insert(args); }));
-  CMD2_ANY_LIST    ("method.insert.value",       ([](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_value_type); }));
-  CMD2_ANY_LIST    ("method.insert.bool",        ([](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_bool_type); }));
-  CMD2_ANY_LIST    ("method.insert.string",      ([](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_string_type); }));
-  CMD2_ANY_LIST    ("method.insert.list",        ([](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_list_type); }));
+  CMD2_ANY_LIST    ("method.insert",             [](const auto&, const auto& args) { return system_method_insert(args); });
+  CMD2_ANY_LIST    ("method.insert.value",       [](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_value_type); });
+  CMD2_ANY_LIST    ("method.insert.bool",        [](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_bool_type); });
+  CMD2_ANY_LIST    ("method.insert.string",      [](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_string_type); });
+  CMD2_ANY_LIST    ("method.insert.list",        [](const auto&, const auto& args) { return system_method_insert_object(args, rpc::object_storage::flag_list_type); });
 
   CMD2_METHOD_INSERT("method.insert.simple",     rpc::object_storage::flag_function_type);
   CMD2_METHOD_INSERT("method.insert.c_simple",   rpc::object_storage::flag_constant | rpc::object_storage::flag_function_type);
   CMD2_METHOD_INSERT("method.insert.s_c_simple", rpc::object_storage::flag_static |
                      rpc::object_storage::flag_constant |rpc::object_storage::flag_function_type);
 
-  CMD2_ANY_STRING  ("method.erase",     ([](const auto&, const auto& args) { return system_method_erase(args); }));
-  CMD2_ANY_LIST    ("method.redirect",  ([](const auto&, const auto& args) { return system_method_redirect(args); }));
+  CMD2_ANY_STRING  ("method.erase",     [](const auto&, const auto& args) { return system_method_erase(args); });
+  CMD2_ANY_LIST    ("method.redirect",  [](const auto&, const auto& args) { return system_method_redirect(args); });
   CMD2_ANY_STRING  ("method.get",       [storage = control->object_storage()](const auto&, const auto& key) { return storage->get_str(key); });
-  CMD2_ANY_LIST    ("method.set",       ([](const auto&, const auto& args) { return system_method_set_function(args); }));
+  CMD2_ANY_LIST    ("method.set",       [](const auto&, const auto& args) { return system_method_set_function(args); });
 
-  CMD2_ANY_STRING  ("method.const",        ([storage = control->object_storage()](const auto&, const auto& key) { return storage->has_flag_str(key, rpc::object_storage::flag_constant); }));
-  CMD2_ANY_STRING_V("method.const.enable", ([storage = control->object_storage()](const auto&, const auto& key) { storage->enable_flag_str(key, rpc::object_storage::flag_constant); }));
+  CMD2_ANY_STRING  ("method.const",        [storage = control->object_storage()](const auto&, const auto& key) { return storage->has_flag_str(key, rpc::object_storage::flag_constant); });
+  CMD2_ANY_STRING_V("method.const.enable", [storage = control->object_storage()](const auto&, const auto& key) { storage->enable_flag_str(key, rpc::object_storage::flag_constant); });
 
-  CMD2_ANY_LIST    ("method.has_key",   ([](const auto&, const auto& args) { return system_method_has_key(args); }));
-  CMD2_ANY_LIST    ("method.set_key",   ([](const auto&, const auto& args) { return system_method_set_key(args); }));
-  CMD2_ANY_STRING  ("method.list_keys", ([](const auto&, const auto& args) { return system_method_list_keys(args); }));
+  CMD2_ANY_LIST    ("method.has_key",   [](const auto&, const auto& args) { return system_method_has_key(args); });
+  CMD2_ANY_LIST    ("method.set_key",   [](const auto&, const auto& args) { return system_method_set_key(args); });
+  CMD2_ANY_STRING  ("method.list_keys", [](const auto&, const auto& args) { return system_method_list_keys(args); });
 
-  CMD2_ANY_STRING  ("method.rlookup",       ([storage = control->object_storage()](const auto&, const auto& key) { return storage->rlookup_obj_list(key); }));
-  CMD2_ANY_STRING_V("method.rlookup.clear", ([storage = control->object_storage()](const auto&, const auto& key) { storage->rlookup_clear(key); }));
+  CMD2_ANY_STRING  ("method.rlookup",       [storage = control->object_storage()](const auto&, const auto& key) { return storage->rlookup_obj_list(key); });
+  CMD2_ANY_STRING_V("method.rlookup.clear", [storage = control->object_storage()](const auto&, const auto& key) { storage->rlookup_clear(key); });
 
-  CMD2_ANY         ("catch", ([](const auto& target, const auto& args) { return cmd_catch(target, args); }));
+  CMD2_ANY         ("catch", [](const auto& target, const auto& args) { return cmd_catch(target, args); });
 
-  CMD2_ANY         ("strings.choke_heuristics",          ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CHOKE_HEURISTICS); }));
-  CMD2_ANY         ("strings.choke_heuristics.upload",   ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CHOKE_HEURISTICS_UPLOAD); }));
-  CMD2_ANY         ("strings.choke_heuristics.download", ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CHOKE_HEURISTICS_DOWNLOAD); }));
-  CMD2_ANY         ("strings.connection_type",           ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CONNECTION_TYPE); }));
-  CMD2_ANY         ("strings.encryption",                ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_ENCRYPTION); }));
-  CMD2_ANY         ("strings.ip_filter",                 ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_IP_FILTER); }));
-  CMD2_ANY         ("strings.ip_tos",                    ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_IP_TOS); }));
-  CMD2_ANY         ("strings.log_group",                 ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_LOG_GROUP); }));
-  CMD2_ANY         ("strings.tracker_event",             ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_TRACKER_EVENT); }));
-  CMD2_ANY         ("strings.tracker_mode",              ([](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_TRACKER_MODE); }));
+  CMD2_ANY         ("strings.choke_heuristics",          [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CHOKE_HEURISTICS); });
+  CMD2_ANY         ("strings.choke_heuristics.upload",   [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CHOKE_HEURISTICS_UPLOAD); });
+  CMD2_ANY         ("strings.choke_heuristics.download", [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CHOKE_HEURISTICS_DOWNLOAD); });
+  CMD2_ANY         ("strings.connection_type",           [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_CONNECTION_TYPE); });
+  CMD2_ANY         ("strings.encryption",                [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_ENCRYPTION); });
+  CMD2_ANY         ("strings.ip_filter",                 [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_IP_FILTER); });
+  CMD2_ANY         ("strings.ip_tos",                    [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_IP_TOS); });
+  CMD2_ANY         ("strings.log_group",                 [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_LOG_GROUP); });
+  CMD2_ANY         ("strings.tracker_event",             [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_TRACKER_EVENT); });
+  CMD2_ANY         ("strings.tracker_mode",              [](const auto&, const auto&) { return torrent::option_list_strings(torrent::OPTION_TRACKER_MODE); });
   // clang-format on
 
 #ifdef HAVE_XMLRPC_TINYXML2
