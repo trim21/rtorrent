@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <functional>
 #include <torrent/download.h>
 #include <torrent/exceptions.h>
@@ -113,11 +114,13 @@ struct view_downloads_filter {
 
 void
 View::emit_changed() {
+  fprintf(stderr, "[view] emit_changed name=%s\n", m_name.c_str()); fflush(stderr);
   torrent::this_thread::scheduler()->update_wait_for(&m_delay_changed, 0ms);
 }
 
 void
 View::emit_changed_now() {
+  fprintf(stderr, "[view] emit_changed_now name=%s\n", m_name.c_str()); fflush(stderr);
   for (auto& itr : m_signal_changed)
     itr();
 }
