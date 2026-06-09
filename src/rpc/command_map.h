@@ -10,7 +10,7 @@
 
 namespace rpc {
 
-struct command_map_data_type {
+struct alignas(16) command_map_data_type {
   // Some commands will need to share data, like get/set a variable. So
   // instead of using a single virtual member function, each command
   // will register a member function pointer to be used instead.
