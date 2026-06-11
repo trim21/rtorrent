@@ -11,6 +11,6 @@ option('pthread-setstacksize', type: 'feature', value: 'auto', description: 'Exp
 option('instrumentation', type: 'boolean', value: false, description: 'Enable instrumentation')
 option('address-space', type: 'integer', value: 0, description: 'Default address space size in MB (0 = auto)')
 option('rpc-backend', type: 'combo', choices: ['auto', 'tinyxml2', 'xmlrpc-c', 'none'], value: 'auto', description: 'XML-RPC backend (auto defaults to tinyxml2)')
-option('lua', type: 'feature', value: 'disabled', description: 'Lua scripting support')
+option('lua', type: 'feature', value: 'auto', description: 'Lua scripting support')
 option('systemd', type: 'feature', value: 'disabled', description: 'systemd socket activation support')
 option('tests', type: 'feature', value: 'auto', description: 'Build unit tests')

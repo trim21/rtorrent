@@ -132,6 +132,8 @@ int main(int, const char**) { return (-1 == inotify_init()); }
 if get_option('inotify').allowed()
     if cpp.compiles(inotify_test, name: 'inotify support')
         conf.set('USE_INOTIFY', 1)
+    elif get_option('inotify').enabled()
+        error('inotify explicitly requested but not available')
     endif
 endif
 
@@ -153,6 +155,8 @@ int main() { posix_fadvise(0, 0, 0, POSIX_FADV_RANDOM); return 0; }
 if get_option('posix-fallocate').allowed()
     if cpp.compiles(fadvise_test, name: 'posix_fadvise')
         conf.set('USE_POSIX_FADVISE', 1)
+    elif get_option('posix-fallocate').enabled()
+        error('posix_fadvise explicitly requested but not available')
     endif
 endif
 
@@ -202,6 +206,8 @@ if get_option('execinfo').allowed()
                 conf.set('HAVE_BACKTRACE', 1)
             endif
         endif
+    elif get_option('execinfo').enabled()
+        error('execinfo explicitly requested but not available')
     endif
 endif
 
@@ -217,6 +223,8 @@ if get_option('visibility').allowed()
         name: 'visibility attribute',
     )
         conf.set('SUPPORT_ATTRIBUTE_VISIBILITY', 1)
+    elif get_option('visibility').enabled()
+        error('visibility attribute explicitly requested but not available')
     endif
 endif
 
@@ -290,6 +298,8 @@ if get_option('pthread-setname-np').allowed()
         conf.set('HAS_PTHREAD_SETNAME_NP_GENERIC', 1)
     elif cpp.links(setname_darwin_test, name: 'pthread_setname_np (darwin)')
         conf.set('HAS_PTHREAD_SETNAME_NP_DARWIN', 1)
+    elif get_option('pthread-setname-np').enabled()
+        error('pthread_setname_np explicitly requested but not available')
     endif
 endif
 
@@ -337,13 +347,12 @@ endif
 have_lua = false
 lua_dep = []
 if get_option('lua').allowed()
-    lua_dep = dependency('lua', required: false)
-    if not lua_dep.found()
-        lua_dep = dependency('lua5.4', required: false)
-    endif
-    if not lua_dep.found()
-        lua_dep = dependency('lua5.3', required: false)
-    endif
+    foreach name : ['lua', 'lua5.4', 'lua5.3', 'luajit', 'luajit-5.1']
+        lua_dep = dependency(name, required: false)
+        if lua_dep.found()
+            break
+        endif
+    endforeach
     if lua_dep.found()
         conf.set('HAVE_LUA', 1)
         have_lua = true
