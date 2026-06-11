@@ -43,8 +43,26 @@ endif
 
 
 # ── Dependencies ──
-libcurl_dep = dependency('libcurl')
-zlib_dep = dependency('zlib')
+libcurl_dep = dependency(
+    'libcurl',
+    default_options: [
+        'ssl=enabled',
+        'openssl=enabled',
+        'libz=enabled',
+        'brotli=enabled',
+        'http2=enabled',
+        'zstd=enabled',
+        'asynchdns=enabled',
+        'idn=enabled',
+        'ssh=disabled',
+        'tool=disabled',
+        'tests=disabled',
+    ],
+)
+zlib_dep = dependency('zlib-ng', required: false)
+if not zlib_dep.found()
+    zlib_dep = dependency('zlib')
+endif
 openssl_dep = dependency('libcrypto')
 conf.set('HAVE_OPENSSL', 1)
 
@@ -565,13 +583,21 @@ libtorrent_deps = [libcurl_dep, zlib_dep, openssl_dep, pthread_dep, atomic_dep]
 libtorrent_lib = static_library(
     'torrent',
     libtorrent_sources,
-    include_directories: include_directories('libtorrent', 'libtorrent/src', 'libtorrent/src/torrent'),
+    include_directories: include_directories(
+        'libtorrent',
+        'libtorrent/src',
+        'libtorrent/src/torrent',
+    ),
     dependencies: libtorrent_deps,
 )
 
 libtorrent_dep_internal = declare_dependency(
     link_with: libtorrent_lib,
-    include_directories: include_directories('libtorrent', 'libtorrent/src', 'libtorrent/src/torrent'),
+    include_directories: include_directories(
+        'libtorrent',
+        'libtorrent/src',
+        'libtorrent/src/torrent',
+    ),
 )
 # ──────────────────────────────────────────────────────────
 
