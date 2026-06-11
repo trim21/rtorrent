@@ -10,6 +10,44 @@ project(
     ],
 )
 
+# ── Apply patches to submodules ──
+foreach subdir : ['libtorrent', 'rtorrent']
+    patch_dir = meson.project_source_root() / 'patches' / subdir
+    r = run_command(
+        'find',
+        patch_dir,
+        '-name',
+        '*.patch',
+        '-type',
+        'f',
+        check: false,
+    )
+    patch_files = r.stdout().strip()
+    if patch_files != ''
+        foreach patch_path : patch_files.split('\n')
+            patch_name = patch_path.split('/')[-1]
+            dir_arg = '--directory=' + subdir
+            check = run_command(
+                'git',
+                'apply',
+                '--check',
+                dir_arg,
+                patch_path,
+                check: false,
+            )
+            if check.returncode() == 0
+                message('Applying patch: @0@/@1@'.format(subdir, patch_name))
+                run_command(
+                    'git',
+                    'apply',
+                    dir_arg,
+                    patch_path,
+                )
+            endif
+        endforeach
+    endif
+endforeach
+
 cpp = meson.get_compiler('cpp')
 conf = configuration_data()
 
@@ -63,11 +101,20 @@ libcurl_dep = dependency(
     static: static_deps,
     default_options: curl_default_options + static_default_options,
 )
-zlib_dep = dependency('zlib-ng', required: false, static: static_deps, default_options: static_default_options)
+zlib_dep = dependency(
+    'zlib-ng',
+    required: false,
+    static: static_deps,
+    default_options: static_default_options,
+)
 if not zlib_dep.found()
     zlib_dep = dependency('zlib', static: static_deps)
 endif
-openssl_dep = dependency('libcrypto', static: static_deps, default_options: static_default_options)
+openssl_dep = dependency(
+    'libcrypto',
+    static: static_deps,
+    default_options: static_default_options,
+)
 conf.set('HAVE_OPENSSL', 1)
 
 pthread_dep = dependency('threads')
@@ -80,7 +127,11 @@ if ncurses_opt.disabled()
 else
     ncurses_dep = dependency('ncursesw', required: false, static: static_deps)
     if not ncurses_dep.found()
-        ncurses_dep = dependency('ncurses', required: ncurses_opt.enabled(), static: static_deps)
+        ncurses_dep = dependency(
+            'ncurses',
+            required: ncurses_opt.enabled(),
+            static: static_deps,
+        )
     endif
     have_ncurses = ncurses_dep.found()
 endif
@@ -378,8 +429,13 @@ have_lua = false
 lua_dep = []
 lua_opt = get_option('lua')
 if lua_opt.allowed()
-    foreach name : ['lua', 'lua5.4', 'lua5.3', 'luajit', 'luajit-5.1']
-        lua_dep = dependency(name, required: false, static: static_deps, default_options: static_default_options)
+    foreach name : ['lua', 'luajit', 'lua5.4', 'lua5.3', 'lua5.2', 'lua5.1']
+        lua_dep = dependency(
+            name,
+            required: false,
+            static: static_deps,
+            default_options: static_default_options,
+        )
         if lua_dep.found()
             break
         endif
@@ -387,6 +443,9 @@ if lua_opt.allowed()
     if lua_dep.found()
         conf.set('HAVE_LUA', 1)
         have_lua = true
+        if not cpp.has_header_symbol('lua.hpp', 'LUA_OK', dependencies: lua_dep)
+            add_project_arguments('-DLUA_OK=0', language: 'cpp')
+        endif
         conf.set_quoted(
             'LUA_DATADIR',
             get_option('prefix') / get_option('datadir') / 'rtorrent' / 'lua',
@@ -401,7 +460,11 @@ have_systemd = false
 systemd_dep = []
 systemd_opt = get_option('systemd')
 if systemd_opt.allowed()
-    systemd_dep = dependency('libsystemd', required: systemd_opt, static: static_deps)
+    systemd_dep = dependency(
+        'libsystemd',
+        required: systemd_opt,
+        static: static_deps,
+    )
     if systemd_dep.found()
         conf.set('HAVE_SYSTEMD', 1)
         have_systemd = true
