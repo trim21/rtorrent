@@ -1,0 +1,7 @@
+/build/
+/meson-build/
+/subprojects/
+.kilo/
+__pycache__/
+*.pyc
+build.sh
