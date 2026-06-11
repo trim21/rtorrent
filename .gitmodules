@@ -1,6 +1,9 @@
 [submodule "libtorrent"]
 	path = libtorrent
 	url = https://github.com/rakshasa/libtorrent
+	branch = master
+
 [submodule "rtorrent"]
 	path = rtorrent
 	url = https://github.com/rakshasa/rtorrent
+	branch = master
