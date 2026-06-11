@@ -95,11 +95,12 @@ epoll_test = '''
 int main() { int fd = epoll_create(100); (void)fd; return 0; }
 '''
 use_epoll = false
-if get_option('epoll').allowed()
+epoll_opt = get_option('epoll')
+if epoll_opt.allowed()
     if cpp.compiles(epoll_test, name: 'epoll support')
         use_epoll = true
         conf.set('USE_EPOLL', 1)
-    elif get_option('epoll').enabled()
+    elif epoll_opt.enabled()
         error('epoll explicitly requested but not available')
     endif
 endif
@@ -111,11 +112,12 @@ kqueue_test = '''
 int main() { int fd = kqueue(); (void)fd; return 0; }
 '''
 use_kqueue = false
-if get_option('kqueue').allowed()
+kqueue_opt = get_option('kqueue')
+if kqueue_opt.allowed()
     if cpp.links(kqueue_test, name: 'kqueue support')
         use_kqueue = true
         conf.set('USE_KQUEUE', 1)
-    elif get_option('kqueue').enabled()
+    elif kqueue_opt.enabled()
         error('kqueue explicitly requested but not available')
     endif
 endif
@@ -129,10 +131,11 @@ inotify_test = '''
 #include <sys/inotify.h>
 int main(int, const char**) { return (-1 == inotify_init()); }
 '''
-if get_option('inotify').allowed()
+inotify_opt = get_option('inotify')
+if inotify_opt.allowed()
     if cpp.compiles(inotify_test, name: 'inotify support')
         conf.set('USE_INOTIFY', 1)
-    elif get_option('inotify').enabled()
+    elif inotify_opt.enabled()
         error('inotify explicitly requested but not available')
     endif
 endif
@@ -152,10 +155,11 @@ fadvise_test = '''
 #include <fcntl.h>
 int main() { posix_fadvise(0, 0, 0, POSIX_FADV_RANDOM); return 0; }
 '''
-if get_option('posix-fallocate').allowed()
+posix_fallocate_opt = get_option('posix-fallocate')
+if posix_fallocate_opt.allowed()
     if cpp.compiles(fadvise_test, name: 'posix_fadvise')
         conf.set('USE_POSIX_FADVISE', 1)
-    elif get_option('posix-fallocate').enabled()
+    elif posix_fallocate_opt.enabled()
         error('posix_fadvise explicitly requested but not available')
     endif
 endif
@@ -190,7 +194,8 @@ elif cpp.compiles(mincore_signed_test, name: 'mincore (signed)')
 endif
 
 # ── execinfo / backtrace ──
-if get_option('execinfo').allowed()
+execinfo_opt = get_option('execinfo')
+if execinfo_opt.allowed()
     if cpp.has_header('execinfo.h')
         conf.set('HAVE_EXECINFO_H', 1)
         # Check if backtrace is available (may need -lexecinfo on BSD)
@@ -206,7 +211,7 @@ if get_option('execinfo').allowed()
                 conf.set('HAVE_BACKTRACE', 1)
             endif
         endif
-    elif get_option('execinfo').enabled()
+    elif execinfo_opt.enabled()
         error('execinfo explicitly requested but not available')
     endif
 endif
@@ -216,14 +221,15 @@ vis_test = '''
 void __attribute__((visibility("default"))) f() {}
 int main() { f(); return 0; }
 '''
-if get_option('visibility').allowed()
+visibility_opt = get_option('visibility')
+if visibility_opt.allowed()
     if cpp.compiles(
         vis_test,
         args: '-fvisibility=hidden',
         name: 'visibility attribute',
     )
         conf.set('SUPPORT_ATTRIBUTE_VISIBILITY', 1)
-    elif get_option('visibility').enabled()
+    elif visibility_opt.enabled()
         error('visibility attribute explicitly requested but not available')
     endif
 endif
@@ -293,23 +299,25 @@ setname_darwin_test = '''
 #include <pthread.h>
 int main() { pthread_t t; pthread_setname_np("foo"); (void)t; return 0; }
 '''
-if get_option('pthread-setname-np').allowed()
+setname_opt = get_option('pthread-setname-np')
+if setname_opt.allowed()
     if cpp.links(setname_generic_test, name: 'pthread_setname_np (generic)')
         conf.set('HAS_PTHREAD_SETNAME_NP_GENERIC', 1)
     elif cpp.links(setname_darwin_test, name: 'pthread_setname_np (darwin)')
         conf.set('HAS_PTHREAD_SETNAME_NP_DARWIN', 1)
-    elif get_option('pthread-setname-np').enabled()
+    elif setname_opt.enabled()
         error('pthread_setname_np explicitly requested but not available')
     endif
 endif
 
 # ── pthread_setstacksize ──
-if get_option('pthread-setstacksize').allowed()
+setstacksize_opt = get_option('pthread-setstacksize')
+if setstacksize_opt.allowed()
     # Auto-enable for musl
     is_musl = host_machine.system() == 'linux' and cpp.has_function(
         '__libc_start_main',
     ) == false
-    if get_option('pthread-setstacksize').enabled() or is_musl
+    if setstacksize_opt.enabled() or is_musl
         conf.set('USE_PTHREAD_SETSTACKSIZE', 1)
         conf.set('DEFAULT_PTHREAD_SETSTACKSIZE', '(8 * 1024 * 1024)')
     endif
@@ -346,7 +354,8 @@ endif
 # ── Lua ──
 have_lua = false
 lua_dep = []
-if get_option('lua').allowed()
+lua_opt = get_option('lua')
+if lua_opt.allowed()
     foreach name : ['lua', 'lua5.4', 'lua5.3', 'luajit', 'luajit-5.1']
         lua_dep = dependency(name, required: false)
         if lua_dep.found()
@@ -360,7 +369,7 @@ if get_option('lua').allowed()
             'LUA_DATADIR',
             get_option('prefix') / get_option('datadir') / 'rtorrent' / 'lua',
         )
-    elif get_option('lua').enabled()
+    elif lua_opt.enabled()
         error('Lua support requested but not found')
     endif
 endif
@@ -368,8 +377,9 @@ endif
 # ── systemd ──
 have_systemd = false
 systemd_dep = []
-if get_option('systemd').allowed()
-    systemd_dep = dependency('libsystemd', required: get_option('systemd'))
+systemd_opt = get_option('systemd')
+if systemd_opt.allowed()
+    systemd_dep = dependency('libsystemd', required: systemd_opt)
     if systemd_dep.found()
         conf.set('HAVE_SYSTEMD', 1)
         have_systemd = true
@@ -722,8 +732,9 @@ install_data(
 #  Tests
 # ──────────────────────────────────────────────────────────
 
-if get_option('tests').allowed()
-    cppunit_dep = dependency('cppunit', required: get_option('tests'))
+tests_opt = get_option('tests')
+if tests_opt.allowed()
+    cppunit_dep = dependency('cppunit', required: tests_opt)
     if cppunit_dep.found()
         test_cflags = ['-DLT_CPPUNIT_TESTING']
 
