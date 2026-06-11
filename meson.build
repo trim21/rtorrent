@@ -43,27 +43,31 @@ endif
 
 
 # ── Dependencies ──
+static_deps = get_option('static-deps')
+static_default_options = static_deps ? ['default_library=static'] : []
+curl_default_options = [
+    'ssl=enabled',
+    'openssl=enabled',
+    'libz=enabled',
+    'brotli=enabled',
+    'http2=enabled',
+    'zstd=enabled',
+    'asynchdns=enabled',
+    'idn=enabled',
+    'ssh=disabled',
+    'tool=disabled',
+    'tests=disabled',
+]
 libcurl_dep = dependency(
     'libcurl',
-    default_options: [
-        'ssl=enabled',
-        'openssl=enabled',
-        'libz=enabled',
-        'brotli=enabled',
-        'http2=enabled',
-        'zstd=enabled',
-        'asynchdns=enabled',
-        'idn=enabled',
-        'ssh=disabled',
-        'tool=disabled',
-        'tests=disabled',
-    ],
+    static: static_deps,
+    default_options: curl_default_options + static_default_options,
 )
-zlib_dep = dependency('zlib-ng', required: false)
+zlib_dep = dependency('zlib-ng', required: false, static: static_deps, default_options: static_default_options)
 if not zlib_dep.found()
-    zlib_dep = dependency('zlib')
+    zlib_dep = dependency('zlib', static: static_deps)
 endif
-openssl_dep = dependency('libcrypto')
+openssl_dep = dependency('libcrypto', static: static_deps, default_options: static_default_options)
 conf.set('HAVE_OPENSSL', 1)
 
 pthread_dep = dependency('threads')
@@ -74,9 +78,9 @@ if ncurses_opt.disabled()
     have_ncurses = false
     ncurses_dep = []
 else
-    ncurses_dep = dependency('ncursesw', required: false)
+    ncurses_dep = dependency('ncursesw', required: false, static: static_deps)
     if not ncurses_dep.found()
-        ncurses_dep = dependency('ncurses', required: ncurses_opt.enabled())
+        ncurses_dep = dependency('ncurses', required: ncurses_opt.enabled(), static: static_deps)
     endif
     have_ncurses = ncurses_dep.found()
 endif
@@ -375,7 +379,7 @@ lua_dep = []
 lua_opt = get_option('lua')
 if lua_opt.allowed()
     foreach name : ['lua', 'lua5.4', 'lua5.3', 'luajit', 'luajit-5.1']
-        lua_dep = dependency(name, required: false)
+        lua_dep = dependency(name, required: false, static: static_deps, default_options: static_default_options)
         if lua_dep.found()
             break
         endif
@@ -397,7 +401,7 @@ have_systemd = false
 systemd_dep = []
 systemd_opt = get_option('systemd')
 if systemd_opt.allowed()
-    systemd_dep = dependency('libsystemd', required: systemd_opt)
+    systemd_dep = dependency('libsystemd', required: systemd_opt, static: static_deps)
     if systemd_dep.found()
         conf.set('HAVE_SYSTEMD', 1)
         have_systemd = true

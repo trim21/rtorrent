@@ -14,3 +14,4 @@ option('rpc-backend', type: 'combo', choices: ['auto', 'tinyxml2', 'xmlrpc-c', '
 option('lua', type: 'feature', value: 'auto', description: 'Lua scripting support')
 option('systemd', type: 'feature', value: 'disabled', description: 'systemd socket activation support')
 option('tests', type: 'feature', value: 'auto', description: 'Build unit tests')
+option('static-deps', type: 'boolean', value: false, description: 'Statically link all dependencies (except glibc)')
